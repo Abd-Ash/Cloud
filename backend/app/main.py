@@ -3,13 +3,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from .routers import auth, media
 from .database import create_database, create_tables, SessionLocal
 from .utils.admin import create_admin_user
+from .migrations import add_folder_id  # Add this line
 
 app = FastAPI()
 
 # CORS configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # Frontend URL
+    allow_origins=["http://localhost:5173"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -18,6 +19,9 @@ app.add_middleware(
 # Create database and tables
 create_database()
 create_tables()
+
+# Run migrations
+add_folder_id.run_migration()  # Add this line
 
 # Create admin user
 db = SessionLocal()

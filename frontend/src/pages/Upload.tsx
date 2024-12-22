@@ -1,11 +1,15 @@
 import { useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '../lib/api';
 import { Upload as UploadIcon } from 'lucide-react';
 
 export default function Upload() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const folderId = searchParams.get('folder');
   
   const upload = useMutation({
     mutationFn: async (files: File[]) => {
@@ -13,10 +17,15 @@ export default function Upload() {
       files.forEach(file => {
         formData.append('files', file);
       });
+      if (folderId) {
+        formData.append('folder_id', folderId);
+      }
       return api.post('/media/upload', formData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['media'] });
+      // Redirect to the gallery, to the same folder if one was selected
+      navigate(folderId ? `/?folder=${folderId}` : '/');
     }
   });
 
