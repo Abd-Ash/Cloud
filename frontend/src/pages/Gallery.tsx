@@ -4,7 +4,8 @@ import { api } from '../lib/api';
 import { Loader } from 'lucide-react';
 import { useAuthStore } from '../stores/authStore';
 import { useNavigate } from 'react-router-dom';
-import MediaCard from '../components/MediaCard';
+// import MediaCard from '../components/MediaCard';
+import MediaCard from '../components/media/MediaCard';
 import FolderView from '../components/FolderView';
 import type { Media, Folder } from '../types';
 
