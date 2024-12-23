@@ -4,6 +4,9 @@ from .routers import auth, media
 from .database import create_database, create_tables, SessionLocal
 from .utils.admin import create_admin_user
 from .migrations import add_folder_id  # Add this line
+from .utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 app = FastAPI()
 
@@ -16,17 +19,23 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Create database and tables
-create_database()
-create_tables()
+# Create database and initialize schema
+try:
+    # Create database and tables
+    create_database()
+    create_tables()
 
-# Run migrations
-add_folder_id.run_migration()  # Add this line
+    # Run migrations
+    add_folder_id.run_migration()  # Add this line
 
-# Create admin user
-db = SessionLocal()
-create_admin_user(db)
-db.close()
+    # Create admin user
+    db = SessionLocal()
+    create_admin_user(db)
+    db.close()
+    logger.info("Database and admin user initialized successfully")
+except Exception as e:
+    logger.error(f"Error initializing database: {str(e)}")
+    raise
 
 # Include routers
 app.include_router(auth.router, prefix="/auth", tags=["auth"])

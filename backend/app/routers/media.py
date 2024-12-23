@@ -5,9 +5,12 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from .. import schemas, models, database
 from ..utils.auth import get_current_user
-from ..utils.storage import save_upload_file, move_file
+from ..utils.storage import save_upload_file, move_file, ensure_file_permissions
+from ..utils.logger import get_logger
+from ..services.media_service import MediaService
 
 router = APIRouter()
+logger = get_logger(__name__)
 
 @router.post("/folders", response_model=schemas.Folder)
 async def create_folder(
@@ -110,18 +113,26 @@ async def get_media_file(
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(database.get_db)
 ):
-    media = db.query(models.Media).filter(
-        models.Media.id == media_id,
-        models.Media.user_id == current_user.id
-    ).first()
+    logger.info(f"Attempting to retrieve media {media_id} for user {current_user.id}")
     
-    if not media:
-        raise HTTPException(status_code=404, detail="Media not found")
-    
-    return FileResponse(media.file_path,  headers={
-            "Access-Control-Allow-Origin": "*",
-            "Cache-Control": "no-cache"
-        })
+    try:
+        media = MediaService.get_media_by_id(db, media_id, current_user)
+        ensure_file_permissions(media.file_path)
+        
+        logger.info(f"Successfully serving media file: {media.file_path}")
+        return FileResponse(
+            media.file_path,
+            media_type=f"{media.media_type}/{os.path.splitext(media.filename)[1][1:]}",
+            filename=media.filename,
+            headers={
+                "Access-Control-Allow-Origin": "*",
+                "Cache-Control": "no-cache",
+                "Access-Control-Allow-Credentials": "true"
+            }
+        )
+    except Exception as e:
+        logger.error(f"Error retrieving media {media_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error retrieving media file")
 
 @router.put("/{media_id}/move")
 async def move_media(
