@@ -1,9 +1,12 @@
 import { Link } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import { LogOut, Upload, Image } from 'lucide-react';
+// import { useSearchParams } from 'react-router-dom';
 
 export default function Navbar() {
   const { logout } = useAuthStore();
+  // const [searchParams] = useSearchParams();
+  // const folderId = searchParams.get('folder');
 
   return (
     <nav className="bg-white shadow">
@@ -17,6 +20,7 @@ export default function Navbar() {
           <div className="flex items-center space-x-4">
             <Link
               to="/upload"
+              // to={`/upload${folderId ? `?folder=${folderId}` : ''}`}
               className="flex items-center space-x-1 px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
             >
               <Upload className="w-4 h-4" />
