@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Dialog } from '../common/Dialog';
-import { Media, Folder } from '../../types';
+import { Media } from '../../types';
 import { useFolders } from '../../hooks/useFolders';
 import { FolderPlus, Folder as FolderIcon } from 'lucide-react';
 
@@ -11,7 +11,7 @@ interface MoveMediaModalProps {
   onMove: (folderId: string | null) => void;
 }
 
-export default function MoveMediaModal({ media, isOpen, onClose, onMove }: MoveMediaModalProps) {
+export default function MoveMediaModal({ isOpen, onClose, onMove }: MoveMediaModalProps) {
   const [newFolderName, setNewFolderName] = useState('');
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
   const { folders, createFolder } = useFolders();
