@@ -7,7 +7,7 @@ from typing import Optional
 
 def ensure_user_directory(user_id: str, folder_id: Optional[str] = None) -> str:
     """Create and return the path to user's upload directory"""
-    base_path = os.path.join("uploads", user_id)
+    base_path = os.path.join("../../uploads", user_id)
     if folder_id:
         base_path = os.path.join(base_path, folder_id)
     

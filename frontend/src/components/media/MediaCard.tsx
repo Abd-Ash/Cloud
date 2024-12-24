@@ -80,9 +80,9 @@ export default function MediaCard({ media }: MediaCardProps) {
           />
         )}
         
-        <div className="p-4">
+        {/* <div className="p-4">
           <p className="text-sm text-gray-600 truncate">{media.filename}</p>
-        </div>
+        </div> */}
       </div>
 
       {/* Modals */}
@@ -92,12 +92,12 @@ export default function MediaCard({ media }: MediaCardProps) {
         onClose={() => setShowPreview(false)}
       />
 
-      {/* <MoveMediaModal
+      <MoveMediaModal
         media={media}
         isOpen={showMoveModal}
         onClose={() => setShowMoveModal(false)}
         onMove={handleMove}
-      /> */}
+      />
 
       <DeleteConfirmModal
         isOpen={showDeleteModal}

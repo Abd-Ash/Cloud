@@ -165,3 +165,98 @@ async def move_media(
     db.refresh(media)
     
     return {"message": "Media moved successfully"}
+
+@router.delete("/{media_id}")
+async def delete_media(
+    media_id: str,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(database.get_db)
+):
+    logger.info(f"Attempting to delete media {media_id} for user {current_user.id}")
+    
+    try:
+        # Get media item
+        media = db.query(models.Media).filter(
+            models.Media.id == media_id,
+            models.Media.user_id == current_user.id
+        ).first()
+        
+        if not media:
+            logger.warning(f"Media {media_id} not found for user {current_user.id}")
+            raise HTTPException(status_code=404, detail="Media not found")
+        
+        # Delete file from filesystem
+        try:
+            if os.path.exists(media.file_path):
+                os.remove(media.file_path)
+        except Exception as e:
+            logger.error(f"Error deleting file {media.file_path}: {str(e)}")
+            # Continue with database deletion even if file deletion fails
+        
+        # Delete from database
+        db.delete(media)
+        db.commit()
+        
+        logger.info(f"Successfully deleted media {media_id}")
+        return {"message": "Media deleted successfully"}
+        
+    except Exception as e:
+        logger.error(f"Error deleting media {media_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error deleting media file")
+    
+@router.delete("/folders/{folder_id}")
+async def delete_folder(
+    folder_id: str,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(database.get_db)
+):
+    """Delete a folder and all its contents"""
+    logger.info(f"Attempting to delete folder {folder_id} for user {current_user.id}")
+    
+    try:
+        # Get folder
+        folder = db.query(models.Folder).filter(
+            models.Folder.id == folder_id,
+            models.Folder.user_id == current_user.id
+        ).first()
+        
+        if not folder:
+            raise HTTPException(status_code=404, detail="Folder not found")
+        
+        # Get all media in folder
+        media_items = db.query(models.Media).filter(
+            models.Media.folder_id == folder_id,
+            models.Media.user_id == current_user.id
+        ).all()
+        
+        # Delete media files
+        for media in media_items:
+            try:
+                if os.path.exists(media.file_path):
+                    os.remove(media.file_path)
+            except Exception as e:
+                logger.error(f"Error deleting file {media.file_path}: {str(e)}")
+        
+        # Delete folder contents from database
+        for media in media_items:
+            db.delete(media)
+        
+        # Delete folder
+        db.delete(folder)
+        db.commit()
+        
+        # Try to remove empty directory
+        folder_path = os.path.join(FILESTORE_BASE_PATH, current_user.id, folder_id)
+        if os.path.exists(folder_path):
+            try:
+                os.rmdir(folder_path)
+            except Exception as e:
+                logger.error(f"Error removing folder directory: {str(e)}")
+        
+        return {"message": "Folder deleted successfully"}
+        
+    except Exception as e:
+        logger.error(f"Error deleting folder {folder_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error deleting folder")
+
+    
