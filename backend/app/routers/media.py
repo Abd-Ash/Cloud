@@ -45,6 +45,8 @@ async def upload_files(
     db: Session = Depends(database.get_db)
 ):
     # Verify folder exists and belongs to user if specified
+    logger.info(f"////11111/////Attempting to retrieve media {folder_id}")
+
     if folder_id:
         folder = db.query(models.Folder).filter(
             models.Folder.id == folder_id,
@@ -246,7 +248,7 @@ async def delete_folder(
         db.commit()
         
         # Try to remove empty directory
-        folder_path = os.path.join(FILESTORE_BASE_PATH, current_user.id, folder_id)
+        folder_path = os.path.join("../../uploads", current_user.id, folder_id)
         if os.path.exists(folder_path):
             try:
                 os.rmdir(folder_path)
